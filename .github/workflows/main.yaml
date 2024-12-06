@@ -1,6 +1,7 @@
 name: Deploy Java App to AWS ASG
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
