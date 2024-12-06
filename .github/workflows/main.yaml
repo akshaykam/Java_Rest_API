@@ -55,12 +55,12 @@ jobs:
 
     - name: Deploy to EC2
       run: |
-        ssh -i ~/.ssh/id_rsa ubuntu@$EC2_PUBLIC_IP << 'EOF'
-        aws s3 cp s3://test-soham-bucket/ /home/ubuntu/deploy
-        java -jar /home/ubuntu/deploy/*.jar 
-        wait 20
-        echo "Deploy Application" &
-        EOF
+        ssh -i ~/.ssh/id_rsa ubuntu@$EC2_PUBLIC_IP << "aws s3 cp s3://test-soham-bucket/ /home/ubuntu/deploy"
+        # aws s3 cp s3://test-soham-bucket/ /home/ubuntu/deploy
+        # java -jar /home/ubuntu/deploy/*.jar 
+        # wait 20
+        # echo "Deploy Application" &
+        # EOF
       env:
         EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
