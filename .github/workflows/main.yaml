@@ -21,7 +21,7 @@ jobs:
 
     - name: Build Java Application
       run: |
-        mvn package -DskipTests # Use Gradle if applicable
+        mvn package
 
   
     - name: Configure AWS Credentials
