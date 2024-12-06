@@ -55,6 +55,7 @@ jobs:
       run: |
         # aws ec2 delete-launch-template --launch-template-name "restapi-app-soham-template"
         # USER_DATA="#!/bin/bash\nnohup java -jar /home/ubuntu/deploy/*.jar > app.log 2>&1"
+        USER_DATA=$(echo -n '#!/bin/bash\njava -jar /home/ubuntu/deploy/*.jar > app.log 2>&1' | base64)
         
         LAUNCH_TEMPLATE_ID=$(aws ec2 create-launch-template \
           --launch-template-name "restapi-app-soham-template" \
@@ -64,7 +65,7 @@ jobs:
             \"InstanceType\": \"t2.small\",
             \"KeyName\": \"soham-alm\",
             \"SecurityGroupIds\": [\"sg-0deb3a1062983c0ba\"],
-            \"UserData\": \"$(echo -n '#!/bin/bash\njava -jar /home/ubuntu/deploy/*.jar > app.log 2>&1' | base64)\"
+            \"UserData\": \"${USER_DATA}\"
           }" \
           --query "LaunchTemplate.LaunchTemplateId" --output text)
         echo "LAUNCH_TEMPLATE_ID=$LAUNCH_TEMPLATE_ID" >> $GITHUB_ENV
