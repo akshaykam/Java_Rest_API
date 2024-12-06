@@ -54,6 +54,10 @@ jobs:
       id: create_launch_template
       run: |
         aws ec2 delete-launch-template --launch-template-name "restapi-app-soham-template"
+        USER_DATA=$(echo "#!/bin/bash
+        
+        nohup java -jar /home/ubuntu/deploy/*.jar > app.log 2>&1" | base64)
+        
         LAUNCH_TEMPLATE_ID=$(aws ec2 create-launch-template \
           --launch-template-name "restapi-app-soham-template" \
           --version-description "Initial version" \
@@ -61,7 +65,8 @@ jobs:
             \"ImageId\": \"${{ env.AMI_ID }}\",
             \"InstanceType\": \"t2.small\",
             \"KeyName\": \"soham-alm\",
-            \"SecurityGroupIds\": [\"sg-0deb3a1062983c0ba\"]
+            \"SecurityGroupIds\": [\"sg-0deb3a1062983c0ba\"],
+            \"UserData\": \"$USER_DATA\"
           }" \
           --query "LaunchTemplate.LaunchTemplateId" --output text)
         echo "LAUNCH_TEMPLATE_ID=$LAUNCH_TEMPLATE_ID" >> $GITHUB_ENV
