@@ -53,7 +53,7 @@ jobs:
     - name: Create Launch Template
       id: create_launch_template
       run: |
-        aws ec2 delete-launch-template --launch-template-name "restapi-app-soham-template"
+        # aws ec2 delete-launch-template --launch-template-name "restapi-app-soham-template"
         USER_DATA=$(echo "#!/bin/bash
         
         nohup java -jar /home/ubuntu/deploy/*.jar > app.log 2>&1")
