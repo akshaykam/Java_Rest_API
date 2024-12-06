@@ -53,6 +53,7 @@ jobs:
     - name: Create Launch Template
       id: create_launch_template
       run: |
+        aws ec2 delete-launch-template --launch-template-name "restapi-app-soham-template"
         LAUNCH_TEMPLATE_ID=$(aws ec2 create-launch-template \
           --launch-template-name "restapi-app-soham-template" \
           --version-description "Initial version" \
