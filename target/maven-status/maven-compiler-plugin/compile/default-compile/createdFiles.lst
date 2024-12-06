@@ -1,0 +1,9 @@
+com\restapidemo\model\Student.class
+com\restapidemo\model\Course.class
+com\restapidemo\repository\StudentRepo.class
+com\restapidemo\service\CourseService.class
+com\restapidemo\repository\CourseRepo.class
+com\restapidemo\controller\CourseController.class
+com\restapidemo\service\StudentService.class
+com\restapidemo\controller\StudentController.class
+com\restapidemo\RestDemoApplication.class
