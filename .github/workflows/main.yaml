@@ -41,58 +41,67 @@ jobs:
       run: |
         aws s3 cp target/*.jar s3://test-soham-bucket/
 
-    - name: Set up SSH key
+    - name: Create New AMI
+      id: create_ami
       run: |
-        mkdir -p ~/.ssh
-        echo "$EC2_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
+        INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=restapi-app-soham" --query "Reservations[*].Instances[0].InstanceId" --output text)
+        AMI_ID=$(aws ec2 create-image --instance-id $INSTANCE_ID --name "restapi-app-soham-$(date +'%Y-%m-%d-%H-%M')" --no-reboot --query "ImageId" --output text)
+        echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
       env:
-        EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }} 
+        AWS_REGION: ${{ secrets.AWS_REGION }}
 
-    - name: Add EC2 instance to known hosts
+    - name: Update Launch Template
       run: |
-        ssh-keyscan -H ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
-
-
-    - name: Deploy to EC2
-      run: |
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_PUBLIC_IP }} <<EOF
-          aws s3 cp s3://test-soham-bucket/ /home/ubuntu/deploy --recursive
-          # java -jar /home/ubuntu/deploy/*.jar
-          nohup java -jar /home/ubuntu/deploy/*.jar > app.log 2>&1 &
-        EOF
+        TEMPLATE_ID=$(aws ec2 describe-launch-templates --filters "Name=tag:Name,Values=restapi-app-soham-temp" --query "LaunchTemplates[0].LaunchTemplateId" --output text)
+        aws ec2 create-launch-template-version \
+          --launch-template-id $TEMPLATE_ID \
+          --version-description "New version with updated AMI" \
+          --source-version 1 \
+          --launch-template-data "{\"ImageId\":\"$AMI_ID\"}"
+        
+        NEW_VERSION=$(aws ec2 describe-launch-template-versions --launch-template-id $TEMPLATE_ID --query "LaunchTemplateVersions[-1].VersionNumber" --output text)
+        aws ec2 modify-launch-template \
+          --launch-template-id $TEMPLATE_ID \
+          --default-version $NEW_VERSION
       env:
-        EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AMI_ID: ${{ env.AMI_ID }}
         AWS_REGION: ${{ secrets.AWS_REGION }}
         
+    - name: Trigger ASG Rolling Update
+      run: |
+        aws autoscaling start-instance-refresh \
+          --auto-scaling-group-name my-auto-scaling-group \
+          --preferences '{"MinHealthyPercentage": 50, "InstanceWarmup": 300}'
+      env:
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+  
+
+        
+    # - name: Set up SSH key
+    #   run: |
+    #     mkdir -p ~/.ssh
+    #     echo "$EC2_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    #     chmod 600 ~/.ssh/id_rsa
+    #   env:
+    #     EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }} 
+
+    # - name: Add EC2 instance to known hosts
+    #   run: |
+    #     ssh-keyscan -H ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
+
+
     # - name: Deploy to EC2
     #   run: |
-    #     ssh -i ~/.ssh/id_rsa ubuntu@$EC2_PUBLIC_IP << "aws s3 cp s3://test-soham-bucket/ /home/ubuntu/deploy"
-    #     # aws s3 cp s3://test-soham-bucket/ /home/ubuntu/deploy
-    #     # java -jar /home/ubuntu/deploy/*.jar 
-    #     # wait 20
-    #     # echo "Deploy Application" &
-    #     # EOF
+    #     ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_PUBLIC_IP }} <<EOF
+    #       aws s3 cp s3://test-soham-bucket/ /home/ubuntu/deploy --recursive
+    #       # java -jar /home/ubuntu/deploy/*.jar
+    #       nohup java -jar /home/ubuntu/deploy/*.jar > app.log 2>&1 &
+    #     EOF
     #   env:
     #     EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
     #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
     #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     #     AWS_REGION: ${{ secrets.AWS_REGION }}
-    
-    # - name: Deploy to EC2
-    #   env:
-    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #     AWS_REGION: ${{ secrets.AWS_REGION }}
-    #   run: |
-    #     # SSH into EC2 instance and deploy
-    #     ssh -o StrictHostKeyChecking=no -i soham-alm.pem ubuntu@34.225.254.177 << 'EOF'
-    #     # sudo yum install java-17-openjdk -y # Ensure Java is installed
-    #     # sudo apt install openjdk-17-jre-headless
-    #     aws s3 cp s3://test-soham-bucket/ /home/ubuntu/deploy
-    #     java -jar /home/ubuntu/deploy/*.jar 
-    #     wait 20
-    #     echo "Deploy Application" &
-    #     EOF
+        
+
+ 
