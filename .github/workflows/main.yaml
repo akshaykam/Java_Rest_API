@@ -38,4 +38,4 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION: ${{ secrets.AWS_REGION }}
       run: |
-        aws s3 cp target/*.jar s3://test-soham-bucket/
+        aws s3 cp target/*.jar https://s3.us-east-1.amazonaws.com/test-soham-bucket/
