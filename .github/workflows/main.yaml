@@ -60,7 +60,7 @@ jobs:
           --launch-template-data "{
             \"ImageId\": \"${{ env.AMI_ID }}\",
             \"InstanceType\": \"t2.small\",
-            \"KeyName\": \"soham-alm.pem\",
+            \"KeyName\": \"soham-alm\",
             \"SecurityGroupIds\": [\"sg-0deb3a1062983c0ba\"]
           }" \
           --query "LaunchTemplate.LaunchTemplateId" --output text)
