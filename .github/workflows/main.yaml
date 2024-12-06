@@ -23,6 +23,7 @@ jobs:
     - name: Build Java Application
       run: |
         mvn clean package
+        pwd
 
   
     - name: Configure AWS Credentials
@@ -38,4 +39,4 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION: us-east-1
       run: |
-        aws s3 cp target/*.jar https://s3.us-east-1.amazonaws.com/test-soham-bucket/
+        aws s3 cp target/*.jar s3://test-soham-bucket/Lab12-Backend-0.0.1-SNAPSHOT.jar
