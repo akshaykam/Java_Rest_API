@@ -60,8 +60,7 @@ jobs:
             \"ImageId\": \"${{ env.AMI_ID }}\",
             \"InstanceType\": \"t2.small\",
             \"KeyName\": \"soham-alm.pem\",
-            \"SecurityGroupIds\": [\"sg-0deb3a1062983c0ba\"],
-            # \"IamInstanceProfile\": {\"Name\": \"your-iam-role-name\"}
+            \"SecurityGroupIds\": [\"sg-0deb3a1062983c0ba\"]
           }" \
           --query "LaunchTemplate.LaunchTemplateId" --output text)
         echo "LAUNCH_TEMPLATE_ID=$LAUNCH_TEMPLATE_ID" >> $GITHUB_ENV
