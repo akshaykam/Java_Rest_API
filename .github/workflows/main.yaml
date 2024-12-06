@@ -24,6 +24,12 @@ jobs:
       run: |
         mvn package
 
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: maven-artifact
+        path: target/*.jar
+
   
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
