@@ -41,18 +41,44 @@ jobs:
       run: |
         aws s3 cp target/*.jar s3://test-soham-bucket/
 
-    - name: Deploy to EC2
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION: ${{ secrets.AWS_REGION }}
+    - name: Set up SSH key
       run: |
-        # SSH into EC2 instance and deploy
-        ssh -o StrictHostKeyChecking=no -i soham-alm.pem ubuntu@34.225.254.177 << 'EOF'
-        # sudo yum install java-17-openjdk -y # Ensure Java is installed
-        # sudo apt install openjdk-17-jre-headless
+        mkdir -p ~/.ssh
+        echo "$EC2_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+      env:
+        EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }} 
+
+    - name: Add EC2 instance to known hosts
+      run: |
+        ssh-keyscan -H $EC2_PUBLIC_IP >> ~/.ssh/known_hosts
+
+    - name: Deploy to EC2
+      run: |
+        ssh -i ~/.ssh/id_rsa ubuntu@$EC2_PUBLIC_IP << 'EOF'
         aws s3 cp s3://test-soham-bucket/ /home/ubuntu/deploy
         java -jar /home/ubuntu/deploy/*.jar 
         wait 20
         echo "Deploy Application" &
         EOF
+      env:
+        EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+    
+    # - name: Deploy to EC2
+    #   env:
+    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #     AWS_REGION: ${{ secrets.AWS_REGION }}
+    #   run: |
+    #     # SSH into EC2 instance and deploy
+    #     ssh -o StrictHostKeyChecking=no -i soham-alm.pem ubuntu@34.225.254.177 << 'EOF'
+    #     # sudo yum install java-17-openjdk -y # Ensure Java is installed
+    #     # sudo apt install openjdk-17-jre-headless
+    #     aws s3 cp s3://test-soham-bucket/ /home/ubuntu/deploy
+    #     java -jar /home/ubuntu/deploy/*.jar 
+    #     wait 20
+    #     echo "Deploy Application" &
+    #     EOF
