@@ -64,6 +64,16 @@ jobs:
           }" \
           --query "LaunchTemplate.LaunchTemplateId" --output text)
         echo "LAUNCH_TEMPLATE_ID=$LAUNCH_TEMPLATE_ID" >> $GITHUB_ENV
+
+    - name: Create Auto Scaling Group
+      run: |
+        aws autoscaling create-auto-scaling-group \
+          --auto-scaling-group-name "restapi-app-soham-asg" \
+          --launch-template "LaunchTemplateId=${{ env.LAUNCH_TEMPLATE_ID }},Version=1" \
+          --min-size 1 \
+          --max-size 2 \
+          --desired-capacity 2 \
+          --vpc-zone-identifier "subnet-985765b3"
     
     # - name: Update Launch Template
     #   run: |
