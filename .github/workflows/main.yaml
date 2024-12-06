@@ -53,19 +53,31 @@ jobs:
       run: |
         ssh-keyscan -H ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
 
+
     - name: Deploy to EC2
       run: |
-        ssh -i ~/.ssh/id_rsa ubuntu@$EC2_PUBLIC_IP << "aws s3 cp s3://test-soham-bucket/ /home/ubuntu/deploy"
-        # aws s3 cp s3://test-soham-bucket/ /home/ubuntu/deploy
-        # java -jar /home/ubuntu/deploy/*.jar 
-        # wait 20
-        # echo "Deploy Application" &
-        # EOF
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_PUBLIC_IP }} <<EOF
+          aws s3 cp s3://test-soham-bucket/ /home/ubuntu/deploy --recursive
+        EOF
       env:
         EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION: ${{ secrets.AWS_REGION }}
+        
+    # - name: Deploy to EC2
+    #   run: |
+    #     ssh -i ~/.ssh/id_rsa ubuntu@$EC2_PUBLIC_IP << "aws s3 cp s3://test-soham-bucket/ /home/ubuntu/deploy"
+    #     # aws s3 cp s3://test-soham-bucket/ /home/ubuntu/deploy
+    #     # java -jar /home/ubuntu/deploy/*.jar 
+    #     # wait 20
+    #     # echo "Deploy Application" &
+    #     # EOF
+    #   env:
+    #     EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
+    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #     AWS_REGION: ${{ secrets.AWS_REGION }}
     
     # - name: Deploy to EC2
     #   env:
