@@ -55,7 +55,7 @@ jobs:
       run: |
         aws ec2 delete-launch-template --launch-template-name "restapi-app-soham-template"
         # USER_DATA="#!/bin/bash\nnohup java -jar /home/ubuntu/deploy/*.jar > app.log 2>&1"
-        USER_DATA=$(echo -n '#!/bin/bash\njava -jar /home/ubuntu/deploy/restapidemo-0.0.1-SNAPSHOT.jar' | base64 -w 0)
+        # USER_DATA=$(echo -n '#!/bin/bash\njava -jar /home/ubuntu/deploy/restapidemo-0.0.1-SNAPSHOT.jar' | base64 -w 0)
         
         LAUNCH_TEMPLATE_ID=$(aws ec2 create-launch-template \
           --launch-template-name "restapi-app-soham-template" \
@@ -64,8 +64,7 @@ jobs:
             \"ImageId\": \"${{ env.AMI_ID }}\",
             \"InstanceType\": \"t2.small\",
             \"KeyName\": \"soham-alm\",
-            \"SecurityGroupIds\": [\"sg-0deb3a1062983c0ba\"],
-            \"UserData\": \"${USER_DATA}\"
+            \"SecurityGroupIds\": [\"sg-0deb3a1062983c0ba\"]
           }" \
           --query "LaunchTemplate.LaunchTemplateId" --output text)
         echo "LAUNCH_TEMPLATE_ID=$LAUNCH_TEMPLATE_ID" >> $GITHUB_ENV
@@ -79,6 +78,11 @@ jobs:
           --max-size 2 \
           --desired-capacity 2 \
           --vpc-zone-identifier "subnet-985765b3"
+
+    - name: Pass User Data to EC2 Instance
+      run: |
+        USER_DATA='#!/bin/bash\njava -jar /home/ubuntu/deploy/restapidemo-0.0.1-SNAPSHOT.jar'
+        aws ec2 run-instances --launch-template LaunchTemplateName=MyLaunchTemplate,Version=1 --user-data "$USER_DATA"
     
     # - name: Update Launch Template
     #   run: |
