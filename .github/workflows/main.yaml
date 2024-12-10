@@ -70,45 +70,47 @@ jobs:
           --query "LaunchTemplate.LaunchTemplateId" --output text)
         echo "LAUNCH_TEMPLATE_ID=$LAUNCH_TEMPLATE_ID" >> $GITHUB_ENV
 
-    - name: Check and Create or Update Auto Scaling Group
-      run: |
-        ASG_NAME="restapi-app-soham-asg"
-        VPC_ZONE_IDENTIFIER="subnet-985765b3"
-        LAUNCH_TEMPLATE="LaunchTemplateId=${{ env.LAUNCH_TEMPLATE_ID }},Version=1"
-        MIN_SIZE=1
-        MAX_SIZE=2
-        DESIRED_CAPACITY=2
     
-        # Check if the Auto Scaling Group exists
-        if aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$ASG_NAME" --query 'AutoScalingGroups[*].AutoScalingGroupName' --output text | grep -q "$ASG_NAME"; then
-          echo "Auto Scaling Group $ASG_NAME exists. Updating..."
-          aws autoscaling update-auto-scaling-group \
-            --auto-scaling-group-name "$ASG_NAME" \
-            --launch-template "$LAUNCH_TEMPLATE" \
-            --min-size "$MIN_SIZE" \
-            --max-size "$MAX_SIZE" \
-            --desired-capacity "$DESIRED_CAPACITY" \
-            --vpc-zone-identifier "$VPC_ZONE_IDENTIFIER"
-        else
-          echo "Auto Scaling Group $ASG_NAME does not exist. Creating..."
-          aws autoscaling create-auto-scaling-group \
-            --auto-scaling-group-name "$ASG_NAME" \
-            --launch-template "$LAUNCH_TEMPLATE" \
-            --min-size "$MIN_SIZE" \
-            --max-size "$MAX_SIZE" \
-            --desired-capacity "$DESIRED_CAPACITY" \
-            --vpc-zone-identifier "$VPC_ZONE_IDENTIFIER"
-        fi
+    - name: Create Auto Scaling Group
+      run: |
+        aws autoscaling create-auto-scaling-group \
+          --auto-scaling-group-name "restapi-app-soham-asg" \
+          --launch-template "LaunchTemplateId=${{ env.LAUNCH_TEMPLATE_ID }},Version=1" \
+          --min-size 1 \
+          --max-size 2 \
+          --desired-capacity 2 \
+          --vpc-zone-identifier "subnet-985765b3"
+    
+    # - name: Check and Create or Update Auto Scaling Group
+    #   run: |
+    #     ASG_NAME="restapi-app-soham-asg"
+    #     VPC_ZONE_IDENTIFIER="subnet-985765b3"
+    #     LAUNCH_TEMPLATE="LaunchTemplateId=${{ env.LAUNCH_TEMPLATE_ID }},Version=1"
+    #     MIN_SIZE=1
+    #     MAX_SIZE=2
+    #     DESIRED_CAPACITY=2
+    
+    #     # Check if the Auto Scaling Group exists
+    #     if aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$ASG_NAME" --query 'AutoScalingGroups[*].AutoScalingGroupName' --output text | grep -q "$ASG_NAME"; then
+    #       echo "Auto Scaling Group $ASG_NAME exists. Updating..."
+    #       aws autoscaling update-auto-scaling-group \
+    #         --auto-scaling-group-name "$ASG_NAME" \
+    #         --launch-template "$LAUNCH_TEMPLATE" \
+    #         --min-size "$MIN_SIZE" \
+    #         --max-size "$MAX_SIZE" \
+    #         --desired-capacity "$DESIRED_CAPACITY" \
+    #         --vpc-zone-identifier "$VPC_ZONE_IDENTIFIER"
+    #     else
+    #       echo "Auto Scaling Group $ASG_NAME does not exist. Creating..."
+    #       aws autoscaling create-auto-scaling-group \
+    #         --auto-scaling-group-name "$ASG_NAME" \
+    #         --launch-template "$LAUNCH_TEMPLATE" \
+    #         --min-size "$MIN_SIZE" \
+    #         --max-size "$MAX_SIZE" \
+    #         --desired-capacity "$DESIRED_CAPACITY" \
+    #         --vpc-zone-identifier "$VPC_ZONE_IDENTIFIER"
+    #     fi
 
     
-    # - name: Create Auto Scaling Group
-    #   run: |
-    #     aws autoscaling create-auto-scaling-group \
-    #       --auto-scaling-group-name "restapi-app-soham-asg" \
-    #       --launch-template "LaunchTemplateId=${{ env.LAUNCH_TEMPLATE_ID }},Version=1" \
-    #       --min-size 1 \
-    #       --max-size 2 \
-    #       --desired-capacity 2 \
-    #       --vpc-zone-identifier "subnet-985765b3"
 
     
