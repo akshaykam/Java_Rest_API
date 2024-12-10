@@ -70,78 +70,45 @@ jobs:
           --query "LaunchTemplate.LaunchTemplateId" --output text)
         echo "LAUNCH_TEMPLATE_ID=$LAUNCH_TEMPLATE_ID" >> $GITHUB_ENV
 
-    - name: Create Auto Scaling Group
+    - name: Check and Create or Update Auto Scaling Group
       run: |
-        aws autoscaling create-auto-scaling-group \
-          --auto-scaling-group-name "restapi-app-soham-asg" \
-          --launch-template "LaunchTemplateId=${{ env.LAUNCH_TEMPLATE_ID }},Version=1" \
-          --min-size 1 \
-          --max-size 2 \
-          --desired-capacity 2 \
-          --vpc-zone-identifier "subnet-985765b3"
-
-    # - name: Pass User Data to EC2 Instance
-    #   run: |
-    #     USER_DATA=$(cat <<EOF
-    #     #!/bin/bash
-    #     java -jar /home/ubuntu/deploy/restapidemo-0.0.1-SNAPSHOT.jar
-    #     EOF
-    #     )
-    #     aws ec2 run-instances --launch-template LaunchTemplateName=restapi-app-soham-template,Version=1 --user-data "$USER_DATA"
+        ASG_NAME="restapi-app-soham-asg"
+        VPC_ZONE_IDENTIFIER="subnet-985765b3"
+        LAUNCH_TEMPLATE="LaunchTemplateId=${{ env.LAUNCH_TEMPLATE_ID }},Version=1"
+        MIN_SIZE=1
+        MAX_SIZE=2
+        DESIRED_CAPACITY=2
     
-    # - name: Update Launch Template
-    #   run: |
-    #     TEMPLATE_ID=$(aws ec2 describe-launch-templates --filters "Name=tag:Name,Values=restapi-app-soham-temp" --query "LaunchTemplates[0].LaunchTemplateId" --output text)
-    #     echo $TEMPLATE_ID
-    #     aws ec2 create-launch-template-version \
-    #       --launch-template-id $TEMPLATE_ID \
-    #       --version-description "New version with updated AMI" \
-    #       --source-version 1 \
-    #       --launch-template-data "{\"ImageId\":\"$AMI_ID\"}"
-        
-    #     NEW_VERSION=$(aws ec2 describe-launch-template-versions --launch-template-id $TEMPLATE_ID --query "LaunchTemplateVersions[-1].VersionNumber" --output text)
-    #     aws ec2 modify-launch-template \
-    #       --launch-template-id $TEMPLATE_ID \
-    #       --default-version $NEW_VERSION
-    #   env:
-    #     AMI_ID: ${{ env.AMI_ID }}
-    #     AWS_REGION: ${{ secrets.AWS_REGION }}
-        
-    # - name: Trigger ASG Rolling Update
-    #   run: |
-    #     aws autoscaling start-instance-refresh \
-    #       --auto-scaling-group-name my-auto-scaling-group \
-    #       --preferences '{"MinHealthyPercentage": 50, "InstanceWarmup": 300}'
-    #   env:
-    #     AWS_REGION: ${{ secrets.AWS_REGION }}
-  
+        # Check if the Auto Scaling Group exists
+        if aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$ASG_NAME" --query 'AutoScalingGroups[*].AutoScalingGroupName' --output text | grep -q "$ASG_NAME"; then
+          echo "Auto Scaling Group $ASG_NAME exists. Updating..."
+          aws autoscaling update-auto-scaling-group \
+            --auto-scaling-group-name "$ASG_NAME" \
+            --launch-template "$LAUNCH_TEMPLATE" \
+            --min-size "$MIN_SIZE" \
+            --max-size "$MAX_SIZE" \
+            --desired-capacity "$DESIRED_CAPACITY" \
+            --vpc-zone-identifier "$VPC_ZONE_IDENTIFIER"
+        else
+          echo "Auto Scaling Group $ASG_NAME does not exist. Creating..."
+          aws autoscaling create-auto-scaling-group \
+            --auto-scaling-group-name "$ASG_NAME" \
+            --launch-template "$LAUNCH_TEMPLATE" \
+            --min-size "$MIN_SIZE" \
+            --max-size "$MAX_SIZE" \
+            --desired-capacity "$DESIRED_CAPACITY" \
+            --vpc-zone-identifier "$VPC_ZONE_IDENTIFIER"
+        fi
 
-        
-    # - name: Set up SSH key
+    
+    # - name: Create Auto Scaling Group
     #   run: |
-    #     mkdir -p ~/.ssh
-    #     echo "$EC2_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-    #     chmod 600 ~/.ssh/id_rsa
-    #   env:
-    #     EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }} 
+    #     aws autoscaling create-auto-scaling-group \
+    #       --auto-scaling-group-name "restapi-app-soham-asg" \
+    #       --launch-template "LaunchTemplateId=${{ env.LAUNCH_TEMPLATE_ID }},Version=1" \
+    #       --min-size 1 \
+    #       --max-size 2 \
+    #       --desired-capacity 2 \
+    #       --vpc-zone-identifier "subnet-985765b3"
 
-    # - name: Add EC2 instance to known hosts
-    #   run: |
-    #     ssh-keyscan -H ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
-
-
-    # - name: Deploy to EC2
-    #   run: |
-    #     ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_PUBLIC_IP }} <<EOF
-    #       aws s3 cp s3://test-soham-bucket/ /home/ubuntu/deploy --recursive
-    #       # java -jar /home/ubuntu/deploy/*.jar
-    #       nohup java -jar /home/ubuntu/deploy/*.jar > app.log 2>&1 &
-    #     EOF
-    #   env:
-    #     EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
-    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #     AWS_REGION: ${{ secrets.AWS_REGION }}
-        
-
- 
+    
