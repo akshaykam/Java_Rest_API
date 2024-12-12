@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  deploy:
+  Build:
     runs-on: self-hosted
 
     steps:
@@ -19,12 +19,18 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17' # Adjust based on your application's requirements
+    
+    - name: Install Maven 3.3
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y maven=3.3.*
 
+    - name: Verify Maven Version
+      run: mvn -version
     - name: Build Java Application
       run: |
         mvn clean package
         pwd
-
   
     # - name: Configure AWS Credentials
     #   uses: aws-actions/configure-aws-credentials@v2
