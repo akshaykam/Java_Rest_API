@@ -1,20 +1,27 @@
-# Use OpenJDK 17 as the base image
+# Stage 1: Build stage
+FROM maven:3.8 AS build
+
+# Set the working directory for the build
+WORKDIR /app
+
+# Copy the Maven project files and the source code
+COPY pom.xml /app/
+COPY src /app/src/
+
+# Run Maven to build the project and generate the jar file
+RUN mvn clean package -DskipTests
+
+# Stage 2: Runtime stage (smaller base image)
 FROM openjdk:17-jdk-slim
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy the Maven wrapper (if available) and the pom.xml
-COPY . /app/
-
-# Install Maven (in case it's not included)
-RUN yum update && yum install -y maven
-
-# Run Maven to build the project and generate the jar file
-RUN mvn clean package -DskipTests
+# Copy only the built JAR file from the build stage
+COPY --from=build /app/target/restapidemo-0.0.1-SNAPSHOT.jar /app/restapidemo.jar
 
 # Expose the port the app will run on (adjust if needed)
 EXPOSE 8080
 
 # Command to run the application
-CMD ["java", "-jar", "target/restapidemo-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "restapidemo.jar"]
