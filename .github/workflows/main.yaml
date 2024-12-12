@@ -22,11 +22,11 @@ jobs:
     
     - name: Install Maven 3.3
       run: |
-        sudo apt-get update
-        sudo apt-get install -y maven=3.3.*
-
-    - name: Verify Maven Version
-      run: mvn -version
+        sudo yum update -y
+        sudo yum update -y
+        sudo yum install maven -y
+        mvn -version
+        
     - name: Build Java Application
       run: |
         mvn clean package
