@@ -35,20 +35,21 @@ jobs:
           
       - name: aws cred
         uses: aws-actions/configure-aws-credentials@v3
-          with:
+        with:
              aws-access-key-id: '${{ secrets.AWS_ACCESS_KEY_ID }}'
              aws-secret-access-key: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
              aws-region: '${{ secrets.AWS_REGION }}'
-  Docker Build and Push:
-           runs-on: self-hosted  
-           steps:
-             - name: Checkout Code
-               uses: actions/checkout@v2
-             - name: Login to Amazon ECR
-               run: |
-                    aws ecr get-login-password --region $AWS_REGION | docker login
-                    --username AWS --password-stdin $ECR_REGISTRY
-             - name: Build Docker Image
-               run: |
-                    sudo docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-                    sudo docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+             
+  Docker-Build-Push:
+    runs-on: self-hosted  
+    steps: 
+     - name: Checkout Code
+       uses: actions/checkout@v2
+     - name: Login to Amazon ECR
+       run: |
+            aws ecr get-login-password --region $AWS_REGION | docker login
+            --username AWS --password-stdin $ECR_REGISTRY
+     - name: Build Docker Image
+       run: |
+            sudo docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+            sudo docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
