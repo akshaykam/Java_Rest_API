@@ -42,8 +42,8 @@ jobs:
           REPOSITORY: my-ecr-repo
           IMAGE_TAG: ${{ github.sha }}
       run: |
-          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
-          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          docker build -t ${{ secrets.ECR_REGISTRY }}/javaappakshay:${{ github.sha }} .
+          docker push ${{ secrets.ECR_REGISTRY }}/javaappakshay:${{ github.sha }}
           
     # - name: Configure AWS Credentials
     #   uses: aws-actions/configure-aws-credentials@v2
