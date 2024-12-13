@@ -41,28 +41,47 @@ jobs:
         mvn clean package
         pwd
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v3
-      with:
-         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-         aws-region: ${{ secrets.AWS_REGION }}
+  Configure AWS credentials:
+     runs-on: self-hosted
+    
+     Steps:
+        -name: aws cred
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+           aws-region: ${{ secrets.AWS_REGION }}
          
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2
-
-    - uses: actions/checkout@v3
-      with:      
-           token: ${{ secrets.GH_PAT_GA }}
+    #     -name: Login to Amazon ECR
+    #     uses: aws-actions/amazon-ecr-login@v2
+        
+    #     -name: checkout
+    # - uses: actions/checkout@v3
+    #   with:      
+    #        token: ${{ secrets.GH_PAT_GA }}
       
-    - name: Buid and Push Docker   
-      run:  | 
-              pwd
-               docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
-               docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
-      env:
-          REGISTRY: ${{ env.ECR_REGISTRY }}
-          REPOSITORY: ${{ env.ECR_REPOSITORY }}
-          IMAGE_TAG: ${{ github.run_number }}
-          # REGISTRY: ${{ steps.login-ecr.outputs.registry }}  
+  Docker Build and Push Docker:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      ECR_REGISTRY : ${{ env.ECR_REGISTRY }} 
+      ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
+      AWS_REGION : ${{ env.AWS_REGION }}
+      IMAGE_TAG: ${{ github.run_number }}
+
+       steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+          
+      - name: Build Docker Image
+        run: |
+          sudo docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+
+      - name: Push Docker Image to Amazon ECR
+        run: |
+          sudo docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
