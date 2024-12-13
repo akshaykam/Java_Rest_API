@@ -1,87 +1,54 @@
 name: Deploy Java App to AWS ASG
-
-on:
-  workflow_dispatch:
+'on':
+  workflow_dispatch: null
   push:
     branches:
       - main
-
 jobs:
   Build:
     runs-on: self-hosted
-
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
-
-    # # Step 2: Cache Maven dependencies
-    # - name: Cache Maven Dependencies
-    #   uses: actions/cache@v2
-    #   with:
-    #       path: ~/.m2/repository
-    #       key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
-    #       restore-keys: |
-    #         maven-${{ runner.os }}-  
-
-    - name: Set up Java
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '17' # Adjust based on your application's requirements
-    
-    - name: Install Maven 3.3
-      run: |
-        sudo yum update -y
-        sudo yum update -y
-        sudo yum install maven -y
-        mvn -version
-        
-    - name: Build Java Application
-      run: |
-        mvn clean package
-        pwd
-
-  Configure AWS credentials:
-     runs-on: self-hosted
-    
-     Steps:
-        -name: aws cred
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-           aws-region: ${{ secrets.AWS_REGION }}
-         
-    #     -name: Login to Amazon ECR
-    #     uses: aws-actions/amazon-ecr-login@v2
-        
-    #     -name: checkout
-    # - uses: actions/checkout@v3
-    #   with:      
-    #        token: ${{ secrets.GH_PAT_GA }}
-      
-  Docker Build and Push Docker:
-    runs-on: ubuntu-latest
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      ECR_REGISTRY : ${{ env.ECR_REGISTRY }} 
-      ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
-      AWS_REGION : ${{ env.AWS_REGION }}
-      IMAGE_TAG: ${{ github.run_number }}
-
-       steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Login to Amazon ECR
+        uses: actions/checkout@v3
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Maven 3.3
         run: |
-          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+          sudo yum update -y
+          sudo yum update -y
+          sudo yum install maven -y
+          mvn -version
+      - name: Build Java Application
+        run: |
+          mvn clean package
+          pwd
+      - name: Cache Maven Dependencies
+        id: maven-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: Maven-Cache-self-hosted
+          restore-keys: Maven-Cache-self-hosted
           
-      - name: Build Docker Image
-        run: |
-          sudo docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-
-      - name: Push Docker Image to Amazon ECR
-        run: |
-          sudo docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      - name: aws cred
+        uses: aws-actions/configure-aws-credentials@v3
+          with:
+             aws-access-key-id: '${{ secrets.AWS_ACCESS_KEY_ID }}'
+             aws-secret-access-key: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+             aws-region: '${{ secrets.AWS_REGION }}'
+  Docker Build and Push:
+           runs-on: self-hosted  
+           steps:
+             - name: Checkout Code
+               uses: actions/checkout@v2
+             - name: Login to Amazon ECR
+               run: |
+                    aws ecr get-login-password --region $AWS_REGION | docker login
+                    --username AWS --password-stdin $ECR_REGISTRY
+             - name: Build Docker Image
+               run: |
+                    sudo docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+                    sudo docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
