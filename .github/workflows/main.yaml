@@ -1,9 +1,10 @@
 name: Deploy Java App to AWS ASG
-'on':
-  workflow_dispatch: null
+on:
+  
   push:
     branches:
       - main
+  workflow_dispatch:     
 jobs:
   Build:
     runs-on: self-hosted
@@ -51,7 +52,7 @@ jobs:
           - name: Get commit hash
             id: get-commit-hash
             run: echo "::set-output name=commit-hash::$(git rev-parse --short HEAD)"
-	  
+
           - name: Get timestamp
             id: get-timestamp
             run: echo "::set-output name=timestamp::$(date +'%Y-%m-%d-%H-%M')"
@@ -65,7 +66,8 @@ jobs:
                 run:|
                   docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
                   docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-	   
+
+
   ECS-Task:
        runs-on: self-hosted
        needs: [ Build, Docker-Build-Push ]
