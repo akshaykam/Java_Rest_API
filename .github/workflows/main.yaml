@@ -1,31 +1,35 @@
 name: Deploy Java App to AWS ASG
+
 on:
-  
+  workflow_dispatch: 
   push:
     branches:
       - main
-  workflow_dispatch:     
+
 jobs:
   Build:
     runs-on: self-hosted
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: '17'
+
       - name: Install Maven 3.3
         run: |
           sudo yum update -y
-          sudo yum update -y
           sudo yum install maven -y
           mvn -version
+
       - name: Build Java Application
         run: |
           mvn clean package
           pwd
+
       - name: Cache Maven Dependencies
         id: maven-cache
         uses: actions/cache@v3
@@ -35,55 +39,55 @@ jobs:
           restore-keys: Maven-Cache-self-hosted
 
   Docker-Build-Push:
-       runs-on: self-hosted
-       needs: [ Build ]
-       steps:      
-          - name: aws cred
-            uses: aws-actions/configure-aws-credentials@v3
-            with:
-                 aws-access-key-id: '${{ secrets.AWS_ACCESS_KEY_ID }}'
-                 aws-secret-access-key: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
-                 aws-region: '${{ secrets.AWS_REGION }}'
+    runs-on: self-hosted
+    needs: [Build]
+    steps:
+      - name: aws cred
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: '${{ secrets.AWS_ACCESS_KEY_ID }}'
+          aws-secret-access-key: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+          aws-region: '${{ secrets.AWS_REGION }}'
 
-          - name: Login to Amazon ECR
-            id: login-ecr
-            uses: aws-actions/amazon-ecr-login@v1
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
-          - name: Get commit hash
-            id: get-commit-hash
-            run: echo "::set-output name=commit-hash::$(git rev-parse --short HEAD)"
+      - name: Get commit hash
+        id: get-commit-hash
+        run: echo "commit-hash=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-          - name: Get timestamp
-            id: get-timestamp
-	    run: echo "::set-output name=timestamp::$(date +'%Y-%m-%d-%H-%M')"
+      - name: Get timestamp
+        id: get-timestamp
+        run: echo "timestamp=$(date +'%Y-%m-%d-%H-%M')" >> $GITHUB_ENV
 
-          - name: Build, tag, and push the image to Amazon ECR
-            id: build-image
-	    env:
-              ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
-              ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
-              IMAGE_TAG: ${{ steps.get-commit-hash.outputs.commit-hash }}-${{ steps.get-timestamp.outputs.timestamp }}
-                run:|
-                  docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-                  docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
+      - name: Build, tag, and push the image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+          IMAGE_TAG: "${{ env.commit-hash }}-${{ env.timestamp }}"
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
 
   ECS-Task:
-       runs-on: self-hosted
-       needs: [ Build, Docker-Build-Push ]
-       steps:      	 
-          - name: Fill in the new image ID in the Amazon ECS task definition
-            id: task-def
-            uses: aws-actions/amazon-ecs-render-task-definition@v1
-            with:
-                task-definition: Task-Defination.json 
-                container-name: Java-API
-                image: ${{ steps.build-image.outputs.image }}    
-                
-          - name: Deploy Amazon ECS task definition
-            uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-            with:
-                task-definition: ${{ steps.task-def.outputs.task-definition }}
-                service: Java-API
-                cluster: Akshay-Fargate-Dev-Cluster
-                wait-for-service-stability: true
+    runs-on: self-hosted
+    needs: [Build, Docker-Build-Push]
+    steps:
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: Task-Defination.json
+          container-name: Java-API
+          image: ${{ env.image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: Java-API
+          cluster: Akshay-Fargate-Dev-Cluster
+          wait-for-service-stability: true
