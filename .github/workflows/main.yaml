@@ -64,7 +64,8 @@ jobs:
               IMAGE_TAG: ${{ steps.get-commit-hash.outputs.commit-hash }}-${{ steps.get-timestamp.outputs.timestamp }}
                 run:|
                   docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-	          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG 
+                  docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+	   
   ECS-Task:
        runs-on: self-hosted
        needs: [ Build, Docker-Build-Push ]
