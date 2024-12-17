@@ -84,13 +84,16 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: Task-Defination.json
+          task-defination-arn: arn:aws:ecs:us-east-1:543816070942:task-definition/Akshay-Fargate-Dev-Cluster-TD:1
+          task-defination-family: Akshay-Fargate-Dev-Cluster-TD
+          #task-defination-revision: 
           container-name: Java-API
           image: 543816070942.dkr.ecr.us-east-1.amazonaws.com/javaappakshay:${{ env.IMAGE_TAG }}
           #image: ${{ needs.Docker-Build-Push.outputs.image }}
           #image: ${{ env.image }}
 
       - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-defination: Akshay-Fargate-Dev-Cluster-TD
           #task-definition: ${{ steps.task-def.outputs.task-definition }}
