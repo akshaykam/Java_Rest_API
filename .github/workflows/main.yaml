@@ -78,6 +78,7 @@ jobs:
     needs: [Build, Docker-Build-Push]
     env:
       IMAGE_TAG: ${{ github.sha }}  
+      ECS_TASK_DEFINATION: Task-Defination.json
     steps:
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
@@ -95,7 +96,7 @@ jobs:
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
-          task-defination: Akshay-Fargate-Dev-Cluster-TD
+          task-defination: ${{ env.ECS_TASK_DEFINITION }} 
           #task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: Java-API
           cluster: Akshay-Fargate-Dev-Cluster
