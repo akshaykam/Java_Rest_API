@@ -85,7 +85,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: Task-Defination.json
-          task-defination-arn: arn:aws:ecs:us-east-1:543816070942:task-definition/Akshay-Fargate-Dev-Cluster-TD:1
+          task-defination-arn: arn:aws:ecs:us-east-1:543816070942:task-definition/Akshay-Fargate-Dev-Cluster-TD:3
           task-defination-family: Akshay-Fargate-Dev-Cluster-TD
           #task-defination-revision: 
           container-name: Java-API
