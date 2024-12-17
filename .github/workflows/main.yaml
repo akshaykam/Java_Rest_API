@@ -76,6 +76,8 @@ jobs:
   ECS-Task:
     runs-on: self-hosted
     needs: [Build, Docker-Build-Push]
+    env:
+      IMAGE_TAG: ${{ github.sha }}  
     steps:
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
@@ -83,7 +85,8 @@ jobs:
         with:
           task-definition: Task-Defination.json
           container-name: Java-API
-          image: ${{ needs.Docker-Build-Push.outputs.image }}
+          image: 543816070942.dkr.ecr.us-east-1.amazonaws.com/javaappakshay:${{ env.IMAGE_TAG }}
+          #image: ${{ needs.Docker-Build-Push.outputs.image }}
           #image: ${{ env.image }}
 
       - name: Deploy Amazon ECS task definition
