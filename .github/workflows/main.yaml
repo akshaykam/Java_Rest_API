@@ -82,7 +82,8 @@ jobs:
         with:
           task-definition: Task-Defination.json
           container-name: Java-API
-          image: ${{ env.image }}
+          image: ${{ needs.Docker-Build-Push.outputs.image }}
+          #image: ${{ env.image }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
