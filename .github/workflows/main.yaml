@@ -94,20 +94,19 @@ jobs:
     - name: Register new task definition
       id: register-task-def
       run: |
-        aws ecs register-task-definition \
+         TASK_DEF_ARN=$(aws ecs register-task-definition \
           --family Akshay-Fargate-Dev-Cluster-TD \
           --network-mode awsvpc \
           --execution-role-arn arn:aws:iam::543816070942:role/ecsTaskExecutionRole \
-          --container-definitions '[
-            {
-              "name": "Java-API-Service",
-              "image": "543816070942.dkr.ecr.us-east-1.amazonaws.com/javaappakshay:${{ env.IMAGE_TAG }}",
-              "memory": 512,
-              "cpu": 256,
-              "essential": true,
-              "portMappings": [{"containerPort": 8080, "hostPort": 8080}]
-            }
-          ]'
+          --container-definitions '[{
+            "name": "Java-API-Service",
+            "image": "543816070942.dkr.ecr.us-east-1.amazonaws.com/javaappakshay:${{ env.IMAGE_TAG }}",
+            "memory": 512,
+            "cpu": 256,
+            "essential": true,
+            "portMappings": [{"containerPort": 8080, "hostPort": 8080}]
+          }]' --query 'taskDefinition.taskDefinitionArn' --output text)
+         echo "::set-output name=taskDefinitionArn::$TASK_DEF_ARN"
 
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v2
