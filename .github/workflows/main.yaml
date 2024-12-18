@@ -68,9 +68,14 @@ jobs:
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
           IMAGE_TAG: "${{ env.commit-hash }}-${{ env.timestamp }}"
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+          #docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          #docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          #echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:latest" >> "$GITHUB_OUTPUT"
+          
           #echo "test=world" >> "$GITHUB_OUTPUT"
           #echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
   ECS-Task:
@@ -85,10 +90,10 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: Task-Defination.json
-          task-defination-arn: arn:aws:ecs:us-east-1:543816070942:task-definition/Akshay-Fargate-Dev-Cluster-TD:3
+          task-defination-arn: arn:aws:ecs:us-east-1:543816070942:task-definition/Akshay-Fargate-Dev-Cluster-TD:latest
           task-defination-family: Akshay-Fargate-Dev-Cluster-TD
           #task-defination-revision: 
-          container-name: Java-API
+          container-name: ECS-Fargate-RespApp
           image: 543816070942.dkr.ecr.us-east-1.amazonaws.com/javaappakshay:${{ env.IMAGE_TAG }}
           #image: ${{ needs.Docker-Build-Push.outputs.image }}
           #image: ${{ env.image }}
@@ -98,6 +103,6 @@ jobs:
         with:
           #task-defination: ${{ env.ECS_TASK_DEFINITION }} 
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: Java-API
+          service: ECS-Fargate-RespApp-AK-Service
           cluster: Akshay-Fargate-Dev-Cluster
           wait-for-service-stability: true
