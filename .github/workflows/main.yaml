@@ -106,7 +106,7 @@ jobs:
             "essential": true,
             "portMappings": [{"containerPort": 8080, "hostPort": 8080}]
           }]' --query 'taskDefinition.taskDefinitionArn' --output text)
-         echo "::set-output name=taskDefinitionArn::$TASK_DEF_ARN"
+         echo "taskDefinitionArn=$TASK_DEF_ARN" >> "$GITHUB_OUTPUT"
 
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v2
