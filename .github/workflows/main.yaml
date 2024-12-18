@@ -111,7 +111,7 @@ jobs:
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
-        task-definition: ${{ steps.register-task-def.outputs.task-definition }}
+        task-definition: ${{ steps.register-task-def.outputs.taskDefinitionArn }}
         service: ECS-Fargate-RespApp-AK-Service
         cluster: Akshay-Fargate-Dev-Cluster
         wait-for-service-stability: true
