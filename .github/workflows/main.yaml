@@ -94,7 +94,8 @@ jobs:
     - name: Register new task definition
       id: register-task-def
       run: |
-         TASK_DEF_ARN=$(aws ecs register-task-definition \
+        set -e
+        TASK_DEF_ARN=$(aws ecs register-task-definition \
           --family Akshay-Fargate-Dev-Cluster-TD \
           --network-mode awsvpc \
           --execution-role-arn arn:aws:iam::543816070942:role/ecsTaskExecutionRole \
@@ -104,9 +105,13 @@ jobs:
             "memory": 512,
             "cpu": 256,
             "essential": true,
-            "portMappings": [{"containerPort": 8080, "hostPort": 8080}]
+            "portMappings": [{"containerPort": 8080}]
           }]' --query 'taskDefinition.taskDefinitionArn' --output text)
-         echo "taskDefinitionArn=$TASK_DEF_ARN" >> "$GITHUB_OUTPUT"
+        if [ -z "$TASK_DEF_ARN" ]; then
+          echo "Task definition registration failed!" >&2
+          exit 1
+        fi
+        echo "taskDefinitionArn=$TASK_DEF_ARN" >> "$GITHUB_OUTPUT"
 
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v2
