@@ -21,8 +21,8 @@ jobs:
 
       - name: Install Maven 3.3
         run: |
-          sudo yum update -y
-          sudo yum install maven -y
+          sudo apt update -y
+          sudo apt install maven -y
           mvn -version
 
       - name: Build Java Application
