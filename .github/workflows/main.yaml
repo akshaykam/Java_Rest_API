@@ -106,7 +106,7 @@ jobs:
             "cpu": 256,
             "essential": true,
             "portMappings": [{"containerPort": 8080}]
-          }]' --query 'taskDefinition.taskDefinitionArn' --output text)
+          }]' \ > task-def.json --query 'taskDefinition.taskDefinitionArn' --output text)
         if [ -z "$TASK_DEF_ARN" ]; then
           echo "Task definition registration failed!" >&2
           exit 1
