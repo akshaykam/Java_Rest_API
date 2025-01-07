@@ -95,7 +95,7 @@ jobs:
       id: register-task-def
       run: |
          TASK_DEF_ARN=$(aws ecs register-task-definition \
-          --family Akshay-Fargate-Dev-Cluster-TD:14 \
+          --family Akshay-Fargate-Dev-Cluster-TD \
           --network-mode awsvpc \
           --execution-role-arn arn:aws:iam::543816070942:role/ecsTaskExecutionRole \
           --container-definitions '[{
