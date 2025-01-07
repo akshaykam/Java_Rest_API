@@ -95,11 +95,11 @@ jobs:
       id: register-task-def
       run: |
          TASK_DEF_ARN=$(aws ecs register-task-definition \
-          --family Akshay-Fargate-Dev-Cluster-TD \
+          --family Akshay-Fargate-Dev-Cluster-TD:14 \
           --network-mode awsvpc \
           --execution-role-arn arn:aws:iam::543816070942:role/ecsTaskExecutionRole \
           --container-definitions '[{
-            "name": "Java-API-Service",
+            "name": "Java-API-Service-111",
             "image": "543816070942.dkr.ecr.us-east-1.amazonaws.com/javaappakshay:${{ env.IMAGE_TAG }}",
             "memory": 512,
             "cpu": 256,
@@ -112,6 +112,6 @@ jobs:
       uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
         task-definition: ${{ steps.register-task-def.outputs.taskDefinitionArn }}
-        service: ECS-Fargate-RespApp-AK-Service
+        service: Java-API-Service-111
         cluster: Akshay-Fargate-Dev-Cluster
         wait-for-service-stability: true
